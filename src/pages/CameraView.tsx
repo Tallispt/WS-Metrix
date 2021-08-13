@@ -25,6 +25,7 @@ import Vector from '../assets/Union.png';
 import ExcludeVector from '../assets/Exclude.png';
 import { CameraHeader } from '../components/CameraHeader';
 import { CameraTab } from '../components/CameraTab';
+import { Replicates } from '../components/Replicates';
 
 import colors from '../styles/colors';
 import fonts from '../styles/fonts';
@@ -32,11 +33,9 @@ import metrics from '../styles/metrics';
 
 export default function CameraView() {
 
+    const isFocused = useIsFocused();
+
     function FocusAwareStatusBar(props: any) {
-        const isFocused = useIsFocused();
-        // if (isFocused) {
-        //     loadSettings();
-        // }
 
         return isFocused ? <StatusBar {...props} /> : null;
     }
@@ -46,6 +45,8 @@ export default function CameraView() {
     const navigation = useNavigation();
 
     const size = useRef(new Animated.ValueXY()).current;
+    const textOpacity = useRef(new Animated.Value(0)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
 
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [hasLibraryPermission, setHasLibraryPermission] = useState(null);
@@ -55,19 +56,24 @@ export default function CameraView() {
     const [handleOn, setHandleOn] = useState<boolean>(false);
 
     const [modeSample, setModeSample] = useState<String>("Sample Mode");
-    const [numPhotos, setNumPhotos] = useState<Number>();
-    const [numReplicatas, setNumReplicatas] = useState<Number>();
+    const [numPhotos, setNumPhotos] = useState<number>();
+    const [replicatesFirst, setReplicatesFirst] = useState<boolean>();
+    const [numReplicatas, setNumReplicatas] = useState<number>();
     const [numPhotoAtual, setNumPhotoAtual] = useState(1);
+    const [numReplicataAtual, setNumReplicataAtual] = useState(1);
     const [restart, setRestart] = useState(false);
 
     const [image, setImage] = useState<string>();
     const [arrayImage, setArrayImage] = useState([]);
     const [arrayBase, setArrayBase] = useState([]);
+    const [replicates, setReplicates] = useState([]);
+    const [replicatesBase, setReplicatesBase] = useState([]);
 
     const [bottomSetUpVisibility, setBottomSetUpVisibility] = useState(true);
     const [isModalSliderVisible, setModalSliderVisible] = useState(false);
-    const [imageSizeVector, setImageSizeVector] = useState<number>(125)
-    const [imageSizeBigVector, setImageSizeBigVector] = useState<number>(200)
+    const [imageSizeVector, setImageSizeVector] = useState<number>(null);
+    const [imageSizeBigVector, setImageSizeBigVector] = useState<number>(null);
+    const [handleAllowImageClickable, setHandleAllowImageClickable] = useState<boolean>(null);
 
     useEffect(() => {
         (async () => {
@@ -84,6 +90,11 @@ export default function CameraView() {
         })();
 
     }, []);
+
+    // useEffect(() => {
+    //     console.log(opacity);
+
+    // }, [opacity])
 
     useFocusEffect(
         React.useCallback(() => {
@@ -121,13 +132,21 @@ export default function CameraView() {
         const settingsData = JSON.parse(data) as SettingsProps;
 
         setNumPhotos(settingsData.SampleNumber);
-        setNumReplicatas(settingsData.ReplicatesNumber)
+        setNumReplicatas(settingsData.ReplicatesNumber);
+        setReplicatesFirst(settingsData.ReplicatesFirst);
+        setImageSizeVector(settingsData.imageSizeVector);
+        setImageSizeBigVector(settingsData.imageSizeBigVector);
+        setHandleAllowImageClickable(settingsData.handleAllowImageClickable);
     }
 
     function reset() {
         setNumPhotoAtual(1);
+        setNumReplicataAtual(1);
         setArrayImage([]);
         setArrayBase([]);
+        setReplicates([]);
+        setReplicatesBase([]);
+        setRestart(false)
     }
 
     async function sharePartialInfo(image: string, base: string, height: number, width: number) {
@@ -144,37 +163,94 @@ export default function CameraView() {
         await AsyncStorage.setItem('@partialInfo', JSON.stringify(partialInfo))
     }
 
+    async function shareVectorInfo() {
+        const data = await AsyncStorage.getItem("@settingsData");
+        const settingsData = JSON.parse(data) as SettingsProps;
+
+        const newData = {
+            RGB: settingsData.RGB,
+            RGBTriple: settingsData.RGBTriple,
+            CMYK: settingsData.CMYK,
+            HSV: settingsData.HSV,
+
+            SampleNumber: settingsData.SampleNumber,
+            ReplicatesNumber: settingsData.ReplicatesNumber,
+            ReplicatesFirst: settingsData.ReplicatesFirst,
+
+            imageSizeVector: imageSizeVector,
+            imageSizeBigVector: imageSizeBigVector,
+            handleAllowImageClickable: settingsData.handleAllowImageClickable,
+        }
+
+        await AsyncStorage.setItem("@settingsData", JSON.stringify(newData))
+
+    }
+
     function changeSizeBig() {
-        Animated.timing(size, { toValue: { x: 180, y: 200 }, duration: 200, useNativeDriver: false }).start();
-        setHandleOn(true)
+        Animated.parallel([
+            Animated.timing(size, { toValue: { x: 180, y: 200 }, duration: 200, useNativeDriver: false }),
+            Animated.timing(textOpacity, { toValue: 0.9, duration: 200, useNativeDriver: false })
+        ]).start()
+        setHandleOn(true);
+        setBottomSetUpVisibility(false)
     }
 
     function changeSizeNull() {
-        Animated.timing(size, { toValue: { x: 0, y: 0 }, duration: 200, useNativeDriver: false }).start();
-        setHandleOn(false)
+        Animated.parallel([
+            Animated.timing(size, { toValue: { x: 0, y: 0 }, duration: 200, useNativeDriver: false }),
+            Animated.timing(textOpacity, { toValue: 0, duration: 200, useNativeDriver: false })
+        ]).start()
+        setHandleOn(false);
+        setBottomSetUpVisibility(true)
+    }
+
+    function fadeOutFadeInView() {
+        Animated.sequence([
+            Animated.timing(opacity, { toValue: 0.9, duration: 50, useNativeDriver: false }),
+            Animated.timing(opacity, { toValue: 0, duration: 50, useNativeDriver: false })
+        ]).start()
     }
 
     async function snap() {
-        // setInputName(undefined);
-        // setInputDescription('No description');
+        fadeOutFadeInView();
         if (cameraRef) {
             const data = await cameraRef.current.takePictureAsync({
                 base64: true,
             });
-            if (modeSample == "Analytical Curve Mode") {
-                arrayImage.push(data.uri);
-                arrayBase.push(data.base64);
+            if (modeSample == "Analytical Curve Mode" && replicatesFirst) {
+                replicates.push(data.uri)
+                // replicatesBase.push(data.base64)
+                setNumReplicataAtual(numReplicataAtual + 1)
+                !restart ? setRestart(true) : null
+                if (numReplicataAtual == numReplicatas) {
+                    setNumReplicataAtual(1)
+                    arrayImage.push(replicates);
+                    setReplicates([]);
+                    // arrayBase.push(replicatesBase);
+                    // setReplicatesBase([]);
+                    setNumPhotoAtual(numPhotoAtual + 1);
+                    if (numPhotoAtual == numPhotos) {
+                        sharePartialInfo(data.uri, data.base64, data.height, data.width)
+                        navigation.navigate("Preview")
+                    }
+                }
+
+            } if (modeSample == "Analytical Curve Mode" && !replicatesFirst) {
+                replicates[numReplicataAtual - 1] = data.uri
+                arrayImage[numPhotoAtual - 1] = replicates
+                // replicatesBase[numReplicataAtual - 1] = data.base64
+                // arrayBase[numPhotoAtual - 1] = replicatesBase
                 setNumPhotoAtual(numPhotoAtual + 1);
                 !restart ? setRestart(true) : null
                 if (numPhotoAtual == numPhotos) {
-                    arrayImage.slice(1, arrayImage.length),
-                        arrayBase.slice(1, arrayBase.length)
-                    sharePartialInfo(data.uri, data.base64, data.height, data.width)
-                    navigation.navigate("Preview")
+                    setNumPhotoAtual(1)
+                    setNumReplicataAtual(numReplicataAtual + 1)
+                    if (numReplicataAtual == numReplicatas && numPhotoAtual == numPhotos) {
+                        sharePartialInfo(data.uri, data.base64, data.height, data.width)
+                        navigation.navigate("Preview")
+                    }
                 }
-            } else {
-                // setArrayImage(['none']);
-                // setArrayBase(['none']);
+            } if (modeSample == "Sample Mode" || modeSample == "WS Mode") {
                 sharePartialInfo(data.uri, data.base64, data.height, data.width)
                 navigation.navigate("Preview")
             }
@@ -207,6 +283,7 @@ export default function CameraView() {
                 style={{ flex: 1 }}
                 type={Camera.Constants.Type.back}
                 flashMode={flashOn}
+                autoFocus={'on'}
             >
                 <CameraHeader
                     pickImage={pickImage}
@@ -215,29 +292,64 @@ export default function CameraView() {
                     Camera={Camera}
                 />
 
+
+                <Animated.View style={{
+                    position: 'absolute',
+                    height: metrics.screenHeight - 214,
+                    width: metrics.screenWidth,
+                    backgroundColor: colors.darker,
+                    bottom: 110,
+                    // zIndex: -10,
+                    opacity: opacity
+                }} />
+
                 <View
                     style={styles.innerCameraView}
                 >
-                    <TouchableOpacity
-                        onPress={() => { setModalSliderVisible(!isModalSliderVisible) }}
-                    >
-                        <Image
-                            style={
-                                modeSample == "WS Mode"
-                                    ? {
-                                        height: imageSizeBigVector,
-                                        width: imageSizeBigVector,
-                                        opacity: 0.2,
-                                        bottom: 60
-                                    } : {
-                                        height: imageSizeVector,
-                                        width: imageSizeVector,
-                                        opacity: 0.2,
-                                        bottom: 80
-                                    }}
-                            source={modeSample == "WS Mode" ? Vector : ExcludeVector}
-                        />
-                    </TouchableOpacity>
+                    {
+                        handleAllowImageClickable ? (
+
+                            <TouchableOpacity
+                                onPress={() => { setModalSliderVisible(!isModalSliderVisible) }}
+                            >
+                                <Image
+                                    style={
+                                        modeSample == "WS Mode"
+                                            ? {
+                                                height: imageSizeBigVector,
+                                                width: imageSizeBigVector,
+                                                opacity: 0.2,
+                                                bottom: 60
+                                            } : {
+                                                height: imageSizeVector,
+                                                width: imageSizeVector,
+                                                opacity: 0.2,
+                                                bottom: 80
+                                            }}
+                                    source={modeSample == "WS Mode" ? Vector : ExcludeVector}
+                                />
+                            </TouchableOpacity>
+                        ) : (
+                            <Image
+                                style={
+                                    modeSample == "WS Mode"
+                                        ? {
+                                            height: imageSizeBigVector,
+                                            width: imageSizeBigVector,
+                                            opacity: 0.2,
+                                            bottom: 60
+                                        } : {
+                                            height: imageSizeVector,
+                                            width: imageSizeVector,
+                                            opacity: 0.2,
+                                            bottom: 80
+                                        }}
+                                source={modeSample == "WS Mode" ? Vector : ExcludeVector}
+                            />
+                        )
+
+
+                    }
 
                     <CameraTab snap={snap} />
 
@@ -249,7 +361,8 @@ export default function CameraView() {
                             borderRadius: 20,
                             position: 'absolute',
                             bottom: 115,
-                            opacity: 0.9,
+                            // opacity: 0.9,
+                            opacity: textOpacity,
                             shadowColor: colors.dark,
                             shadowRadius: 2,
                             shadowOpacity: 90,
@@ -257,6 +370,7 @@ export default function CameraView() {
                             elevation: -2,
                             zIndex: 20,
                         }}>
+
                         {handleOn &&
                             <>
                                 <TouchableOpacity
@@ -266,7 +380,7 @@ export default function CameraView() {
                                         changeSizeNull()
                                     }}
                                 >
-                                    <Text style={{ color: colors.white }}>
+                                    <Text style={[{ color: colors.white }, modeSample == "Sample Mode" ? { fontWeight: '700' } : {}]}>
                                         Sample Mode
                                     </Text>
                                 </TouchableOpacity>
@@ -280,7 +394,7 @@ export default function CameraView() {
                                         restart ? setRestart(false) : null
                                     }}
                                 >
-                                    <Text style={{ color: colors.white }}>
+                                    <Text style={[{ color: colors.white }, modeSample == "Analytical Curve Mode" ? { fontWeight: '700' } : {}]}>
                                         Analytical Curve Mode
                                     </Text>
                                 </TouchableOpacity>
@@ -291,7 +405,7 @@ export default function CameraView() {
                                         changeSizeNull()
                                     }}
                                 >
-                                    <Text style={{ color: colors.white }}>
+                                    <Text style={[{ color: colors.white }, modeSample == "WS Mode" ? { fontWeight: '700' } : {}]}>
                                         WS Mode
                                     </Text>
                                 </TouchableOpacity>
@@ -335,12 +449,17 @@ export default function CameraView() {
                                 style={{
                                     position: 'absolute',
                                     bottom: 115,
-                                    left: 10
+                                    left: 10,
+                                    alignItems: 'center'
                                 }}
                             >
                                 <Text style={styles.modeText}>
-                                    {`${numReplicatas} replicatas`}
+                                    {`Replicatas: ${numReplicatas}`}
                                 </Text>
+                                <Replicates
+                                    numReplicates={numReplicatas}
+                                    numReplicataAtual={numReplicataAtual}
+                                />
 
                             </View>
 
@@ -372,6 +491,7 @@ export default function CameraView() {
                             style={styles.modeButton}
                             onPress={() => {
                                 changeSizeBig()
+                                // animatedValue(opacity, 0.9, 0, 100)
 
                             }}
                         >
@@ -387,8 +507,12 @@ export default function CameraView() {
 
                 <MiniModal
                     isVisible={isModalSliderVisible}
-                    onBackdropPress={() => setModalSliderVisible(false)}
-                    onSwipeComplete={() => setModalSliderVisible(false)}
+                    onBackdropPress={() => {
+                        setModalSliderVisible(false)
+                    }}
+                    onSwipeComplete={() => {
+                        setModalSliderVisible(false)
+                    }}
                     onModalWillShow={() => setBottomSetUpVisibility(!bottomSetUpVisibility)}
                     onModalWillHide={() => setBottomSetUpVisibility(!bottomSetUpVisibility)}
                     swipeDirection={'down'}
@@ -397,9 +521,9 @@ export default function CameraView() {
                 >
 
                     <View style={{
-                        height: metrics.screenHeight / 8.1,
+                        height: metrics.screenHeight / 9,
                         position: 'absolute',
-                        bottom: 85,
+                        bottom: 95,
                         backgroundColor: colors.darker,
                         opacity: 0.85,
                         borderRadius: 10,
@@ -418,41 +542,13 @@ export default function CameraView() {
                             minimumTrackTintColor={colors.primary_light}
                             maximumTrackTintColor={colors.ligher}
                             onValueChange={(value: number) => { modeSample == "WS Mode" ? setImageSizeBigVector(value) : setImageSizeVector(value) }}
+                            onTouchEnd={() => { shareVectorInfo() }}
                         />
                         <Text style={{ color: colors.white }}>{modeSample == "WS Mode" ? imageSizeBigVector : imageSizeVector}</Text>
                     </View>
                 </MiniModal>
 
             </Camera>
-
-            {/* {image &&
-
-                <Modal
-                    animationType="slide"
-                    transparent={false}
-                    visible={open}
-                    presentationStyle={'overFullScreen'}
-                    style={{ backgroundColor: colors.background }}
-                >
-                    <CameraModal
-                        image={image}
-                        height={height}
-                        width={width}
-                        setOpen={setOpen}
-                        setArrayImage={setArrayImage}
-                        setNumPhotoAtual={setNumPhotoAtual}
-                        numSampleMode={numSampleMode}
-                        numCurveMode={numCurveMode}
-                        numWSMode={numWSMode}
-                        setInputName={setInputName}
-                        setInputDescription={setInputDescription}
-                        handleResults={handleResults}
-                        loading={loading}
-                        modeSample={modeSample}
-
-                    />
-                </Modal>
-            } */}
 
         </View>
 

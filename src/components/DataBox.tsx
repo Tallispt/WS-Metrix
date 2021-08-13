@@ -44,13 +44,10 @@ export function DataBox({
     const [photos, setPhotos] = useState<string>();
 
     function listPhotos() {
-        if (data.sample == "ResultMode") {
-            setPhotos(String(data.uri))
-        }
-        if (data.sample == "CalibrationMode") {
+        if (data.sample == "Analytical Curve Mode") {
             const arrayPhoto = String(data.uri[0]);
             setPhotos(arrayPhoto)
-        }
+        } else setPhotos(String(data.uri))
     }
 
     useEffect(() => {
@@ -82,7 +79,7 @@ export function DataBox({
                 style={styles.dataContainer}
                 {...rest}
                 onPress={() => {
-                    console.log(data.uri);
+                    // console.log(data.uri);
                 }}
             >
                 <View>
@@ -163,7 +160,8 @@ const styles = StyleSheet.create({
     dataImage: {
         width: 70,
         height: 70,
-        right: 5
+        right: 5,
+        borderRadius: 5
 
     }
 

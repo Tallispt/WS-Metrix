@@ -74,6 +74,10 @@ export interface SettingsProps {
     SampleNumber: number,
     ReplicatesNumber: number,
     ReplicatesFirst: boolean,
+
+    imageSizeVector: number,
+    imageSizeBigVector: number,
+    handleAllowImageClickable: boolean,
 }
 
 export async function loadSampleData(): Promise<SampleDataProps[]> {

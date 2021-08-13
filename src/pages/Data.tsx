@@ -9,7 +9,7 @@ import {
     Dimensions
 } from 'react-native';
 
-import { SampleDataProps, CurveDataProps, loadSampleData, loadCurveData, removeSampleData, removeCurveData } from '../libs/storage';
+import { SampleDataProps, CurveDataProps, loadSampleData, loadCurveData, removeSampleData, removeCurveData, loadWSSampleData, WSSampleDataProps } from '../libs/storage';
 import { DataBox } from '../components/DataBox';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
@@ -22,9 +22,11 @@ import { Load } from '../components/Load';
 export default function Data() {
     const [mySampleData, setMySampleData] = useState<SampleDataProps[]>([]);
     const [myCurveData, setMyCurveData] = useState<CurveDataProps[]>([]);
+    const [myWSSampleData, setMyWSSampleData] = useState<WSSampleDataProps[]>([]);
     const [loading, setLoading] = useState(true);
     const [noSampleData, setNoSampleData] = useState(null);
     const [noCurveData, setNoCurveData] = useState(null);
+    const [noWSSampleData, setNoWSSampleData] = useState(null);
 
     const Tab = createMaterialTopTabNavigator();
 
@@ -38,14 +40,14 @@ export default function Data() {
                 text: 'Sim',
                 onPress: async () => {
                     try {
-                        if (data.sample == "ResultMode") {
+                        if (data.sample == "Sample Mode") {
                             await removeSampleData(data.id);
 
                             setMySampleData((oldData) =>
                                 oldData.filter((item) => item.id != data.id)
                             );
                         }
-                        if (data.sample == "CalibrationMode") {
+                        if (data.sample == "Analytical Curve Mode") {
                             await removeCurveData(data.id);
 
                             setMyCurveData((oldData) =>
@@ -74,6 +76,10 @@ export default function Data() {
                 setMyCurveData(dataCurve);
                 setNoCurveData(dataCurve.length == 0 ? true : false)
 
+                const dataWS = await loadWSSampleData();
+                setMyWSSampleData(dataWS);
+                setNoWSSampleData(dataWS.length == 0 ? true : false)
+
 
                 setLoading(false);
             }
@@ -87,23 +93,38 @@ export default function Data() {
             <View style={{ flex: 1 }}>
 
                 {
-                    loading ? (
-                        <Load />
-                    ) : (
-                        <FlatList
-                            data={mySampleData}
-                            keyExtractor={item => String(item.id)}
-                            style={styles.flatListView}
-                            renderItem={({ item }) => (
-                                <DataBox
-                                    data={item}
-                                    handleRemove={() => handleRemove(item)}
-                                />
+                    loading &&
 
-                            )}
-                        >
-                        </FlatList>
-                    )
+                    <Load />
+                }
+
+                {
+                    !loading && noSampleData &&
+
+                    <View style={{ alignItems: 'center', top: metrics.screenHeight / 3 }}>
+                        <Text style={{ fontFamily: fonts.complement, color: colors.light }}>
+                            No data
+                        </Text>
+                    </View>
+                }
+
+
+                {
+                    !loading && !noSampleData &&
+
+                    <FlatList
+                        data={mySampleData}
+                        keyExtractor={item => String(item.id)}
+                        style={styles.flatListView}
+                        renderItem={({ item }) => (
+                            <DataBox
+                                data={item}
+                                handleRemove={() => handleRemove(item)}
+                            />
+
+                        )}
+                    >
+                    </FlatList>
                 }
 
 
@@ -115,25 +136,41 @@ export default function Data() {
     const calibrationMode = () => {
         return (
             <View style={{ flex: 1 }}>
+
                 {
-                    loading ? (
-                        <Load />
-                    ) : (
-                        <FlatList
-                            data={myCurveData}
-                            keyExtractor={item => String(item.id)}
-                            style={styles.flatListView}
-                            renderItem={({ item }) => (
-                                <DataBox
-                                    data={item}
-                                    handleRemove={() => handleRemove(item)}
-                                />
+                    loading &&
 
-                            )}
+                    <Load />
+                }
 
-                        >
-                        </FlatList>
-                    )
+                {
+                    !loading && noCurveData &&
+
+                    <View style={{ alignItems: 'center', top: metrics.screenHeight / 3 }}>
+                        <Text style={{ fontFamily: fonts.complement, color: colors.light }}>
+                            No data
+                        </Text>
+                    </View>
+                }
+
+
+                {
+                    !loading && !noCurveData &&
+
+                    <FlatList
+                        data={myCurveData}
+                        keyExtractor={item => String(item.id)}
+                        style={styles.flatListView}
+                        renderItem={({ item }) => (
+                            <DataBox
+                                data={item}
+                                handleRemove={() => handleRemove(item)}
+                            />
+
+                        )}
+
+                    >
+                    </FlatList>
                 }
 
             </View>
@@ -141,15 +178,51 @@ export default function Data() {
         )
     }
 
-    // if (myData == null) {
-    //     return (
-    //         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-    //             <Text>
-    //                 No data
-    //             </Text>
-    //         </View>
-    //     )
-    // }
+    const WSMode = () => {
+        return (
+            <View style={{ flex: 1 }}>
+
+                {
+                    loading &&
+
+                    <Load />
+                }
+
+                {
+                    !loading && noWSSampleData &&
+
+                    <View style={{ alignItems: 'center', top: metrics.screenHeight / 3 }}>
+                        <Text style={{ fontFamily: fonts.complement, color: colors.light }}>
+                            No data
+                        </Text>
+                    </View>
+                }
+
+
+                {
+                    !loading && !noWSSampleData &&
+
+                    <FlatList
+                        data={myWSSampleData}
+                        keyExtractor={item => String(item.id)}
+                        style={styles.flatListView}
+                        renderItem={({ item }) => (
+                            <DataBox
+                                data={item}
+                                handleRemove={() => handleRemove(item)}
+                            />
+
+                        )}
+
+                    >
+                    </FlatList>
+                }
+
+
+            </View>
+
+        )
+    }
 
 
     return (
@@ -175,6 +248,7 @@ export default function Data() {
             >
                 <Tab.Screen name="Results" component={resultsMode} options={{ title: "Results" }} />
                 <Tab.Screen name="Calibration" component={calibrationMode} options={{ title: "Calibration Curves" }} />
+                <Tab.Screen name="WS" component={WSMode} options={{ title: "WS Results" }} />
             </Tab.Navigator>
         </>
     )

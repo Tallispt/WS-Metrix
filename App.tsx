@@ -33,6 +33,10 @@ export default function App() {
     SampleNumber: 6,
     ReplicatesNumber: 3,
     ReplicatesFirst: true,
+
+    imageSizeVector: 125,
+    imageSizeBigVector: 200,
+    handleAllowImageClickable: false
   }
 
   const checkForFirstTimeLoaded = async () => {

@@ -72,7 +72,7 @@ export default function Main() {
 
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => { Teste() }}
+                    onPress={() => { navigation.navigate("Results") }}
                 >
                     <Text style={styles.buttonText}>Teste</Text>
                 </TouchableOpacity>

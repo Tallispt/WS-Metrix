@@ -14,6 +14,7 @@ export function Load() {
             <LottieView
                 source={loadAnimation}
                 autoPlay
+                duration={2000}
                 loop
                 style={style.animation}
 

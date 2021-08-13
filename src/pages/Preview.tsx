@@ -3,7 +3,6 @@ import {
     Text,
     View,
     TouchableOpacity,
-    StatusBar,
     Image,
     StyleSheet,
     TextInput,
@@ -13,7 +12,6 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as MediaLibrary from 'expo-media-library';
-import LottieView from 'lottie-react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -50,7 +48,7 @@ export const Preview = () => {
     const [height, setHeight] = useState<Number>();
 
     const [inputName, setInputName] = useState<string>();
-    const [inputDescription, setInputDescription] = useState<string>();
+    const [inputDescription, setInputDescription] = useState<string>("No description");
 
     useEffect(() => {
         sampleStorage();
@@ -133,6 +131,16 @@ export const Preview = () => {
         }
     };
 
+    // async function getDataNLocation(): Promise<any> {
+    //     const now = new Date()
+    //     const time = now.toLocaleTimeString();
+    //     const date = now.toLocaleDateString();
+
+    //     const { coords } = await Location.getCurrentPositionAsync({});
+    //     const locationInfo = await Location.reverseGeocodeAsync(coords)[0];
+
+    // }
+
     async function handleResults() {
         try {
             if (modeSample == "Sample Mode") {
@@ -144,7 +152,7 @@ export const Preview = () => {
                 const time = now.toLocaleTimeString();
                 const date = now.toLocaleDateString();
 
-                const local = await Location.getCurrentPositionAsync({});
+                const local = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
                 const locationInfo = await Location.reverseGeocodeAsync(local.coords);
 
                 const title = !inputName ? `Sample ${numSampleMode}` : inputName;
@@ -178,10 +186,6 @@ export const Preview = () => {
                         ...zipData
                     })
                 )
-
-                console.log(newData.geocode);
-
-
             }
 
             if (modeSample == "Analytical Curve Mode") {
@@ -193,7 +197,7 @@ export const Preview = () => {
                 const time = now.toLocaleTimeString();
                 const date = now.toLocaleDateString();
 
-                const local = await Location.getCurrentPositionAsync({});
+                const local = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
                 const locationInfo = await Location.reverseGeocodeAsync(local.coords);
 
                 const title = !inputName ? `Analytical Curve ${numCurveMode}` : inputName;
@@ -237,7 +241,7 @@ export const Preview = () => {
                 const time = now.toLocaleTimeString();
                 const date = now.toLocaleDateString();
 
-                const local = await Location.getCurrentPositionAsync({});
+                const local = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
                 const locationInfo = await Location.reverseGeocodeAsync(local.coords);
 
                 const title = !inputName ? `WS Sample ${numWSMode}` : inputName;
@@ -283,39 +287,29 @@ export const Preview = () => {
 
 
     return (
-        <>
-            {/* <FocusAwareStatusBar barStyle={'dark-content'} /> */}
-            <View style={styles.container}>
-                <View style={styles.modalButtonsContainer}>
+        <View style={styles.container}>
+            {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+            <View style={styles.modalButtonsContainer}>
 
-                    <TouchableOpacity
-                        style={{ margin: 10 }}
-                        onPress={() => {
-                            navigation.goBack()
-                        }}
-                    >
-                        <Icon name="chevron-left" style={styles.arrowIcon} size={24} />
+                <View style={{ position: 'absolute', top: 68, left: 25 }}>
+                    <TouchableOpacity onPress={() => { navigation.goBack() }}>
+                        <Icon name="chevron-left" size={24} style={{ color: colors.dark }} />
                     </TouchableOpacity>
+                </View>
 
-                    <Text style={styles.headerText}>
-                        Preview
-                    </Text>
+                <Text style={styles.headerText}>
+                    Preview
+                </Text>
 
-                    {/* <TouchableOpacity
-                        onPress={() => { }}
-                    >
-                        <Text>
-                            Teste
-                        </Text>
-                    </TouchableOpacity> */}
-
-                    <TouchableOpacity style={{ margin: 10 }}
-                        onPress={() => savePic()}
-                    >
+                <View style={{ position: 'absolute', top: 55, right: 25 }}>
+                    <TouchableOpacity style={{ margin: 10 }} onPress={() => savePic()}>
                         <FontAwesome5 name="file-download" style={styles.arrowIcon} size={24} />
                     </TouchableOpacity>
-
                 </View>
+
+            </View>
+
+            <View style={{ alignItems: 'center', margin: 10 }}>
 
                 <TextInput
                     style={styles.modalInput}
@@ -324,6 +318,7 @@ export const Preview = () => {
                     onChangeText={(value: string) => {
                         setInputName(value)
                     }}
+                    keyboardType={'default'}
                 />
 
                 <TextInput
@@ -333,32 +328,30 @@ export const Preview = () => {
                     onChangeText={(value: string) => {
                         setInputDescription(value)
                     }}
+                    keyboardType={'default'}
                 />
 
-
-                <View style={styles.modalImageContainer}>
-                    <Image
-                        style={styles.modalImage}
-                        source={{ uri: image }}
-                    />
-                </View>
-
-                <TouchableOpacity
-                    style={styles.modalResultsButton}
-                    onPress={() => {
-                        handleResults()
-                        navigation.navigate("Results")
-                    }}
-                >
-                    <Text style={styles.modalText}>Results</Text>
-
-                </TouchableOpacity>
             </View>
 
+            <View style={styles.modalImageContainer}>
+                <Image
+                    style={styles.modalImage}
+                    source={{ uri: image }}
+                />
+            </View>
 
+            <TouchableOpacity
+                style={styles.modalResultsButton}
+                onPress={() => {
+                    handleResults()
+                    navigation.navigate("Results")
+                }}
+            >
+                <Text style={styles.modalText}>Results</Text>
 
-        </>
-
+            </TouchableOpacity>
+            {/* </TouchableWithoutFeedback> */}
+        </View>
 
     );
 }
@@ -369,7 +362,6 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.background,
         flex: 1,
-        height: metrics.screenHeight
     },
 
     arrowIcon: {
@@ -385,39 +377,38 @@ const styles = StyleSheet.create({
 
     modalButtonsContainer: {
         height: metrics.navBarHeight + metrics.statusBarHeight * 2,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        paddingHorizontal: metrics.doubleBaseMargin * 2,
-        paddingBottom: metrics.baseMargin,
+        paddingTop: metrics.doubleBaseMargin,
+        paddingBottom: 10,
+        paddingHorizontal: metrics.doubleBaseMargin,
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: colors.ligher
+        borderColor: colors.ligher,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'flex-end',
     },
 
     modalInput: {
-        // color: colors.dark,
         fontSize: 24,
         textAlign: 'center',
-        marginTop: 10,
-        padding: 5,
+        paddingTop: 5,
         borderBottomWidth: 2,
-        borderBottomColor: colors.light
+        borderBottomColor: colors.light,
+        width: metrics.screenWidth * 0.4
     },
 
     modalInputDescription: {
-        // color: colors.dark,
         fontSize: 20,
         textAlign: 'center',
-        marginTop: 5,
-        padding: 5,
+        paddingTop: 5,
         borderBottomWidth: 1,
-        borderBottomColor: colors.ligher
+        borderBottomColor: colors.ligher,
+        width: metrics.screenWidth * 0.4
     },
 
     modalImageContainer: {
         marginHorizontal: 20,
-        marginBottom: 20,
-        marginTop: 10,
+        marginVertical: 10,
         shadowColor: colors.regular,
         shadowRadius: 2,
         shadowOpacity: 90,
