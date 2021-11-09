@@ -84,7 +84,7 @@ export function CameraHeader({ pickImage, setFlashOn, flashOn, Camera }) {
 
 const styles = StyleSheet.create({
     headerContainer: {
-        height: metrics.navBarHeight + metrics.statusBarHeight * 2,
+        height: metrics.headerHeight,
         backgroundColor: colors.darker,
         opacity: 0.9,
         flexDirection: 'row',

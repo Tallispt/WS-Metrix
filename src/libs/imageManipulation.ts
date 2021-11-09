@@ -3,6 +3,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 // import { GLView } from 'expo-gl';
 import Canvas, { CanvasProps } from 'react-native-canvas';
+var getPixels = require("get-pixels")
 
 function hexToRgb(hex) {
     var bigint = parseInt(hex, 16);

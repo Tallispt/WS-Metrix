@@ -6,7 +6,8 @@ import {
     ScrollView,
     Switch,
     TouchableOpacity,
-    Animated
+    Animated,
+    Alert
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -91,6 +92,7 @@ export function Settings() {
     }
 
     async function onGoingBack() {
+
         const data = {
             RGB: RGB,
             RGBTriple: RGBTriple,
@@ -104,23 +106,38 @@ export function Settings() {
             imageSizeVector: imageSizeVector,
             imageSizeBigVector: imageSizeBigVector,
             handleAllowImageClickable: handleAllowImageClickable
+
         }
 
         await AsyncStorage.setItem("@settingsData", JSON.stringify(data));
 
     }
 
-    function handleReturnDefault() {
-        setRGB(true);
-        setRGBTriple(true);
-        setCMYK(true);
-        setHSV(true);
-        setNumSamples(6);
-        setNumReplicates(3);
-        setReplicatesFirst(true);
-        setImageSizeVector(125);
-        setImageSizeBigVector(200);
-        setHandleAllowImageClickable(false)
+    const handleReturnDefault = () => {
+
+        Alert.alert("Default", 'Are you sure to return to default settings?', [
+            {
+                text: 'No',
+                style: 'cancel'
+            },
+            {
+                text: 'Default settings',
+                style: 'default',
+                onPress: () => {
+                    setRGB(true);
+                    setRGBTriple(true);
+                    setCMYK(true);
+                    setHSV(true);
+                    setNumSamples(6);
+                    setNumReplicates(3);
+                    setReplicatesFirst(true);
+                    setImageSizeVector(125);
+                    setImageSizeBigVector(200);
+                    setHandleAllowImageClickable(false)
+                }
+            }
+        ])
+
     }
 
     return (
@@ -471,7 +488,7 @@ const styles = StyleSheet.create({
     },
 
     headerContainer: {
-        height: metrics.navBarHeight + metrics.statusBarHeight * 2,
+        height: metrics.headerHeight,
         paddingTop: metrics.doubleBaseMargin,
         paddingBottom: 10,
         paddingHorizontal: metrics.doubleBaseMargin,

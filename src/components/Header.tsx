@@ -17,9 +17,6 @@ import metrics from '../styles/metrics'
 
 export default function Header() {
 
-    // const route = useRoute();
-
-
     return (
         <View style={styles.container}>
 
@@ -37,7 +34,7 @@ export default function Header() {
 
 const styles = StyleSheet.create({
     container: {
-        height: metrics.navBarHeight + metrics.statusBarHeight * 2,
+        height: metrics.headerHeight,
         paddingTop: metrics.doubleBaseMargin,
         paddingBottom: 10,
         paddingHorizontal: metrics.doubleBaseMargin,

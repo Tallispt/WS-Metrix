@@ -6,6 +6,8 @@ import { Welcome_2 } from '../pages/Welcome_2';
 import { Settings } from '../pages/Settings';
 import { Results } from '../pages/Results';
 import { Preview } from '../pages/Preview';
+// import GLCameraView from '../pages/GLCameraView'
+import CanvasView from '../pages/CanvasView'
 // import ImageView from '../pages/ImageView';
 
 const Stack = createStackNavigator();
@@ -27,7 +29,7 @@ const AppRoutes: React.FC = () => (
         <Stack.Screen
             name='Settings'
             component={Settings}
-            options={{}}
+            options={{ }}
         />
         <Stack.Screen
             name='Preview'
@@ -36,6 +38,15 @@ const AppRoutes: React.FC = () => (
         <Stack.Screen
             name='Results'
             component={Results}
+        />
+
+        {/* <Stack.Screen
+            name={'Teste'}
+            component={GLCameraView}
+        /> */}
+        <Stack.Screen
+            name={'CanvasView'}
+            component={CanvasView}
         />
     </Stack.Navigator>
 );

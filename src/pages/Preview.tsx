@@ -44,8 +44,8 @@ export const Preview = () => {
     const [base, setBase] = useState<string>();
     const [arrayImage, setArrayImage] = useState([]);
     const [arrayBase, setArrayBase] = useState([]);
-    const [width, setWidth] = useState<Number>();
-    const [height, setHeight] = useState<Number>();
+    const [width, setWidth] = useState<number>();
+    const [height, setHeight] = useState<number>();
 
     const [inputName, setInputName] = useState<string>();
     const [inputDescription, setInputDescription] = useState<string>("No description");
@@ -69,14 +69,6 @@ export const Preview = () => {
         setHeight(data.imageHeight);
         setWidth(data.imageWidth);
     }
-
-    const placeholder = () => {
-        if (modeSample == "Sample Mode") return `Sample ${numSampleMode}`
-        if (modeSample == "Analytical Curve Mode") return `Analytical Curve ${numCurveMode}`
-        if (modeSample == "WS Mode") return `WS Sample ${numWSMode}`
-    }
-
-    const placeholderValue = placeholder();
 
     async function savePic() {
         const asset = await MediaLibrary.createAssetAsync(image)
@@ -131,15 +123,12 @@ export const Preview = () => {
         }
     };
 
-    // async function getDataNLocation(): Promise<any> {
-    //     const now = new Date()
-    //     const time = now.toLocaleTimeString();
-    //     const date = now.toLocaleDateString();
-
-    //     const { coords } = await Location.getCurrentPositionAsync({});
-    //     const locationInfo = await Location.reverseGeocodeAsync(coords)[0];
-
-    // }
+    const placeholder = () => {
+        if (modeSample == "Sample Mode") return `Sample ${numSampleMode}`
+        if (modeSample == "Analytical Curve Mode") return `Analytical Curve ${numCurveMode}`
+        if (modeSample == "WS Mode") return `WS Sample ${numWSMode}`
+    };
+    const placeholderValue = String(placeholder());
 
     async function handleResults() {
         try {
@@ -312,7 +301,11 @@ export const Preview = () => {
             <View style={{ alignItems: 'center', margin: 10 }}>
 
                 <TextInput
-                    style={styles.modalInput}
+                    style={
+                        [
+                            styles.modalInput
+                            , { width: !inputName ? placeholderValue.length * 16 : inputName.length * 13 + 20 }]
+                    }
                     placeholder={placeholderValue}
                     placeholderTextColor={colors.darker}
                     onChangeText={(value: string) => {
@@ -322,7 +315,7 @@ export const Preview = () => {
                 />
 
                 <TextInput
-                    style={styles.modalInputDescription}
+                    style={[styles.modalInputDescription, { width: !inputDescription ? 70 : inputDescription.length * 8 + 20 }]}
                     placeholder={'Description'}
                     placeholderTextColor={colors.heading}
                     onChangeText={(value: string) => {
@@ -376,7 +369,7 @@ const styles = StyleSheet.create({
     },
 
     modalButtonsContainer: {
-        height: metrics.navBarHeight + metrics.statusBarHeight * 2,
+        height: metrics.headerHeight,
         paddingTop: metrics.doubleBaseMargin,
         paddingBottom: 10,
         paddingHorizontal: metrics.doubleBaseMargin,
@@ -391,19 +384,22 @@ const styles = StyleSheet.create({
     modalInput: {
         fontSize: 24,
         textAlign: 'center',
-        paddingTop: 5,
-        borderBottomWidth: 2,
-        borderBottomColor: colors.light,
-        width: metrics.screenWidth * 0.4
+        paddingVertical: 5,
+        borderWidth: 1,
+        borderColor: colors.ligher,
+        borderRadius: 5,
+        backgroundColor: colors.white
     },
 
     modalInputDescription: {
         fontSize: 20,
         textAlign: 'center',
-        paddingTop: 5,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.ligher,
-        width: metrics.screenWidth * 0.4
+        paddingVertical: 5,
+        borderWidth: 1,
+        borderColor: colors.ligher,
+        borderRadius: 5,
+        backgroundColor: colors.white,
+        marginTop: 5
     },
 
     modalImageContainer: {
@@ -421,7 +417,7 @@ const styles = StyleSheet.create({
 
     modalImage: {
         width: '100%',
-        height: metrics.screenHeight / 1.6,
+        height: metrics.screenHeight / 1.7,
         borderRadius: 10,
         padding: 20,
 

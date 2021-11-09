@@ -91,18 +91,11 @@ export default function CameraView() {
 
     }, []);
 
-    // useEffect(() => {
-    //     console.log(opacity);
+    useEffect(() => {
+        loadSettings();
+        reset();
 
-    // }, [opacity])
-
-    useFocusEffect(
-        React.useCallback(() => {
-            loadSettings();
-            reset()
-
-        }, [])
-    );
+    }, [isFocused])
 
     if (hasCameraPermission === null) {
         return <View />;

@@ -45,9 +45,10 @@ export function DataBox({
 
     function listPhotos() {
         if (data.sample == "Analytical Curve Mode") {
-            const arrayPhoto = String(data.uri[0]);
+            const arrayPhoto = String(data.uri[0][0]);
             setPhotos(arrayPhoto)
         } else setPhotos(String(data.uri))
+
     }
 
     useEffect(() => {
@@ -79,7 +80,7 @@ export function DataBox({
                 style={styles.dataContainer}
                 {...rest}
                 onPress={() => {
-                    // console.log(data.uri);
+                    console.log(data.uri);
                 }}
             >
                 <View>

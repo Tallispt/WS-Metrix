@@ -19,27 +19,44 @@ import fonts from '../styles/fonts';
 import metrics from '../styles/metrics';
 import { Teste } from '../libs/GetHex_2';
 
+import { StorageDataProps } from '../libs/storage';
+
+import { getPixelRGBA } from 'react-native-get-pixel';
+import exclude from '../assets/Exclude.png'
+
 export default function Main() {
+
+    const [base, setBase] = useState<string>();
 
     const navigation = useNavigation();
 
     const clearAsyncStorage = async () => {
-        Alert.alert("Remover", 'Tem certeza que deseja remover todos os dados?', [
+        Alert.alert("Remove", 'Are you sure you want to remove all data?', [
             {
-                text: 'Não',
+                text: 'No',
                 style: 'cancel'
             },
             {
-                text: 'Sim',
+                text: 'Yes',
+                style: 'destructive',
                 onPress: async () => {
                     try {
                         AsyncStorage.clear();
                     } catch (error) {
-                        Alert.alert('Não foi possível apagar os dados')
+                        Alert.alert('Could not clear data')
                     }
                 }
             }
         ])
+    }
+
+    async function getUri() {
+        const data = await AsyncStorage.getItem("@dataSample");
+        const parseData = JSON.parse(data) as StorageDataProps;
+        const uri = String(parseData[1].data.base64);
+        const src = "data:image/jpeg;base64," + uri;
+
+        setBase(src)
     }
 
     return (
@@ -72,7 +89,17 @@ export default function Main() {
 
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => { navigation.navigate("Results") }}
+                    onPress={() => {
+                        navigation.navigate("Results")
+                        // console.log("foi");
+
+                        // getPixelRGBA(exclude, 2, 2)
+                        //     .then(color => console.log(color)) // [243, 123, 0]
+                        //     .catch(err => { });
+                        // console.log("foi");
+
+
+                    }}
                 >
                     <Text style={styles.buttonText}>Teste</Text>
                 </TouchableOpacity>
